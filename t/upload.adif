@@ -1,0 +1,12 @@
+ADIF Export from RumLogNG by DL2RUM
+For further info visit: http://www.dl2rum.de
+
+<ADIF_VER:5>3.0.6
+<CREATED_TIMESTAMP:15>20180408 133846
+<PROGRAMID:8>RUMlogNG
+<PROGRAMVERSION:9>3.12 Beta
+<EOH>
+
+
+<call:10>2E0PUH/222 <qso_date:8>20180121 <time_on:6>100000 <band:3>80m <freq:8>3.797000  <mode:3>SSB <rst_sent:2>56 <rst_rcvd:2>59 <app_rumlog_qsl:1>W <qsl_rcvd:1>N <qsl_sent:1>R <state:5>POWYS <dxcc:3>294 <cqz:2>14 <ituz:2>27 <cont:2>EU <name:11>Test Person <qth:17>Llanidloes, Wales <gridsquare:6>IO82FK <app_rumlog_power:3>QRP <eqsl_qsl_rcvd:1>N <eqsl_qsl_sent:1>Y <lotw_qsl_rcvd:1>N <lotw_qsl_sent:1>Y <pfx:3>MW6 <clublog_qso_upload_status:1>Y <app_rumlog_colorcode:1>0 <eor>
+<call:10>2E0PUH/111 <qso_date:8>20180121 <time_on:6>100000 <band:3>80m <freq:8>3.797000  <mode:3>SSB <rst_sent:2>59 <rst_rcvd:2>59 <app_rumlog_qsl:1>W <qsl_rcvd:1>N <qsl_sent:1>R <state:5>POWYS <dxcc:3>294 <cqz:2>14 <ituz:2>27 <cont:2>EU <name:13>Test Person 2 <qth:17>Llanidloes, Wales <gridsquare:6>IO82FK <app_rumlog_power:3>QRP <eqsl_qsl_rcvd:1>N <eqsl_qsl_sent:1>Y <lotw_qsl_rcvd:1>N <lotw_qsl_sent:1>Y <pfx:3>MW0 <clublog_qso_upload_status:1>Y <app_rumlog_colorcode:1>0 <eor>

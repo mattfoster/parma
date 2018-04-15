@@ -1,0 +1,227 @@
+#! /usr/bin/env perl
+
+use warnings;
+use strict;
+
+use Data::Dump;
+use Getopt::Long;
+use Pod::Usage;
+use LWP::UserAgent;
+use URI::Encode qw( uri_encode );
+
+my $url    = "https://logbook.qrz.com/api";
+
+my $key;
+my $callsign;
+my $check;
+my $adif;
+my $help;
+my $man;
+my $verbose = 0;
+
+GetOptions(
+    'adif=s'     => \$adif,
+    'check'      => \$check,
+    'callsign=s' => \$callsign,
+    'key=s'      => \$key,
+    'help'       => \$help,
+    'man'        => \$man,
+    'verbose!'   => \$verbose,
+) or pod2usage(2);
+
+pod2usage(1) if $help;
+pod2usage(-exitval => 0, -verbose => 2) if $man;
+
+# We always need a logbook key
+pod2usage('Please specify a logbook key with --key') unless $key;
+
+my $ua = LWP::UserAgent->new();
+$ua->agent('2E0PUH uploader');
+
+# The check option allows checking the API key
+if ($check) {
+    my ($status, $reason) = check_key($ua, $key);
+
+    if ( ! defined $status) {
+        warn "Problem with key: $reason->{REASON}";
+        exit 1;
+    }
+    else {
+        warn "Key OK. Dumping status info\n";
+        use Data::Dump; dd $reason;
+        exit 0;
+    }
+}
+
+# But by default we want to upload logs so check we have the args we need.
+else {
+    pod2usage("Please specify and ADIF file with --adif") unless $adif && -r $adif;
+    pod2usage("Please specify a callsign with --callsign") unless $callsign;
+}
+
+open(my $adif_fh, $adif) or die "Couldn't open file $adif";
+
+my @data;
+my $ok_count = 0;
+my $bad_count = 0;
+my $line_no = 0;
+my %reasons;
+
+my $callsign_string = '<station_callsign:' . length($callsign) . '>' . $callsign;
+
+# The following code naievely assume one QSO per line
+# TODO: handle multi line data?
+foreach my $line (<$adif_fh>) {
+    $line_no++;
+    next unless $line =~ /<eor>/;
+    chomp $line;
+
+    # QRZ wants station callsign entries, so we will probably have to add one
+    if ($line !~ /<statio_callsign:/) {
+        $line =~ s{<eor>}{$callsign_string <eor>}g;
+    }
+
+    my $encoded_adif_data = uri_encode($line);
+
+    my ($result, $reason) = upload_adif_data($ua, $encoded_adif_data);
+
+    # Keep track of successes and failures
+    if (defined $result && $result == 0) {
+        $ok_count++;
+    }
+    else {
+        $bad_count++;
+        $reasons{$reason}++ if ($reason);
+        warn "Line $line_no: $reason\n" if $verbose;
+    }
+
+}
+
+close $adif_fh;
+
+# Print some status information
+warn "Completed. OK: $ok_count FAIL: $bad_count\n";
+if (%reasons) {
+    warn "Saw the following failures:\n";
+    foreach my $reason (keys %reasons) {
+        warn " * $reasons{$reason} of '$reason'\n";
+    }
+}
+
+sub upload_adif_data {
+    my $ua = shift;
+    my $encoded_adif_data = shift;
+
+    my $response = $ua->request(
+        HTTP::Request->new(
+            POST => $url,
+            undef,
+            "KEY=${key}&ACTION=INSERT&ADIF=$encoded_adif_data",
+        )
+    );
+
+    if ($response->is_success) {
+        my $status = parse_response($response->content);
+
+        if (defined $status->{STATUS} && $status->{STATUS} eq 'OK') {
+            return (0, undef);
+        }
+        if (defined $status->{RESULT} && $status->{RESULT} eq 'OK') {
+            return (0, undef);
+        }
+        else {
+            return (undef, $status->{REASON});
+        }
+    }
+    return;
+}
+
+sub parse_response {
+    my $content = shift;
+
+    my %info;
+    foreach my $entry (split(/&/, $content)) {
+        my ($key, $value) = split(/=/, $entry);
+        $info{$key} = $value;
+    }
+
+    return \%info;
+}
+
+sub check_key {
+    my $ua = shift;
+    my $key = shift;
+
+    # check the key works
+    my $response = $ua->request(
+        HTTP::Request->new(
+            POST => $url,
+            undef,
+            "key=${key}&action=status",
+        )
+    );
+
+    if ($response->is_success) {
+        my $status = parse_response($response->content);
+
+        if ($status->{STATUS}) {
+            return (undef, $status);
+        }
+        else {
+            return (0, $status);
+        }
+    }
+    return;
+}
+
+__END__
+=head1 TITLE
+
+qrz_upload - A simple ADIF uploader for qrz.com.
+
+=head1 SYNOPSIS
+
+    qrz_upload --key=logbook_key --adif=file.adif
+    qrz_upload --key=logbook_key --check
+
+=head1 DESCRIPTION
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<--key>
+
+Specify the QRZ logbook API key
+
+=item B<--check>
+
+Specify the you want to check the API key rather than upload QSOs.
+
+=item B<--adif=file>
+
+Specify the ADIF file to upload.
+
+=item B<--callsign>
+
+Specify the callsign to add to ADIF entries (when there isn't one already).
+
+This needs to match QRZ's expecations or your QSOs won't be imported. 
+
+Use B<--check> to see which callsign the logbook's key specifies. 
+
+=item B<--help> 
+
+Print short a help message.
+
+=item B<--man>
+
+Print full help. 
+
+=back
+
+=head1 AUTHOR
+
+Written by Matt Foster 2E0PUH L<qso@hackerific.net>
+
+=cut
