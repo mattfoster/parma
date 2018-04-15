@@ -12,7 +12,14 @@ Contents:
 `qrz_upload` has two modes of operation. The first, `--check` is designed to
 let you check that your logbook's API key works, and the second uploads data.
 
-I've tried to keep this script's dependencies to a minimum, but you'll need:
+I won't be held responsible to any problems with your logbooks, so please test
+everything using a secondary logbook on qrz.com before building this into your
+workflows.
+
+### dependencies
+
+I've tried to keep this script's dependencies to a minimum, but to run this
+you'll need:
 
 * Data::Dump
 * Pod::Usage
