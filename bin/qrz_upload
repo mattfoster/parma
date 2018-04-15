@@ -55,7 +55,7 @@ if ($check) {
 
 # But by default we want to upload logs so check we have the args we need.
 else {
-    pod2usage("Please specify and ADIF file with --adif") unless $adif && -r $adif;
+    pod2usage("Please specify an ADIF file with --adif") unless $adif && -r $adif;
     pod2usage("Please specify a callsign with --callsign") unless $callsign;
 }
 
