@@ -38,6 +38,8 @@ To find the key for your log, visit: http://logbook.qrz.com/logbook, and look
 on the settings pane on the left. The key is the 16 character code on the
 bottom of the pane.
 
+![](settings.png)
+
 To test it works, run:
 
         % ./bin/qrz_upload --key=XXXX-XXXX-XXXX-XXXX --check
