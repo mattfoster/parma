@@ -73,7 +73,7 @@ When you are confident you have the key correct, you can move to uploading.
 
 Upload mode requires little more input than check mode. This is because all
 entries you upload to qrz.com must have a `station callsign` entry. 
-My logging software of choice [http://www.dl2rum.de/rumsoft/RUMLog.html RUMLogNG] 
+My logging software of choice [RUMLogNG](http://www.dl2rum.de/rumsoft/RUMLog.html)
 does not include station callsigns in its exported ADIF data, so my
 script must add them. As a result you must currently specify the callsign on
 the command line in addition to the API key, and the callsign must match the
