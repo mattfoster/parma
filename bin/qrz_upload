@@ -218,6 +218,10 @@ Print short a help message.
 
 Print full help. 
 
+=item B<--verbose>
+
+Print which lines in an ADIF file weren't uploaded.
+
 =back
 
 =head1 AUTHOR
