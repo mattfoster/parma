@@ -5,8 +5,9 @@ use strict;
 
 use Data::Dump;
 use Getopt::Long;
-use Pod::Usage;
+use Ham::ADIF;
 use LWP::UserAgent;
+use Pod::Usage;
 use URI::Encode qw( uri_encode );
 
 my $url    = "https://logbook.qrz.com/api";
@@ -67,21 +68,60 @@ my $bad_count = 0;
 my $line_no = 0;
 my %reasons;
 
-my $callsign_string = '<station_callsign:' . length($callsign) . '>' . $callsign;
+# my $callsign_string = '<station_callsign:' . length($callsign) . '>' . $callsign;
 
-# The following code naievely assume one QSO per line
-# TODO: handle multi line data?
-foreach my $line (<$adif_fh>) {
-    $line_no++;
-    next unless $line =~ /<eor>/;
-    chomp $line;
+# # The following code naievely assume one QSO per line
+# # TODO: handle multi line data?
+# foreach my $line (<$adif_fh>) {
+#     $line_no++;
+#     next unless $line =~ /<eor>/;
+#     chomp $line;
+#     $line =~ s{\r}{};
 
-    # QRZ wants station callsign entries, so we will probably have to add one
-    if ($line !~ /<statio_callsign:/) {
-        $line =~ s{<eor>}{$callsign_string <eor>}g;
+#     # QRZ wants station callsign entries, so we will probably have to add one
+#     if ($line !~ /<station_callsign:/) {
+#         $line =~ s{<eor>}{$callsign_string <eor>}i;
+#     }
+
+#     my ($result, $reason) = upload_adif_data($ua, $encoded_adif_data);
+
+#     # Keep track of successes and failures
+#     if (defined $result && $result == 0) {
+#         $ok_count++;
+#     }
+#     else {
+#         $bad_count++;
+#         $reasons{$reason}++ if ($reason);
+#         warn "Line $line_no: $reason\n" if $verbose;
+#     }
+
+# }
+
+my $adif_parser = Ham::ADIF->new;
+my $records = $adif_parser->parse_file($adif);
+
+# Add station callsigns
+for my $record (@{ $records }) {
+    $record->{'station_callsign'} = $callsign;
+}
+
+for my $record (@{ $records }) {
+    my $encoded_adif_data;
+
+    foreach my $key (keys %{ $record }) {
+        my $val = $record->{$key};
+
+        next unless $val;
+
+        my $enc = uri_encode($val, { encode_reserved => 1 });
+        my $len = length $enc;
+
+        $encoded_adif_data .= "<$key:$len>$enc ";
     }
 
-    my $encoded_adif_data = uri_encode($line);
+    next unless $encoded_adif_data;
+
+    $encoded_adif_data  .= '<eor>';
 
     my ($result, $reason) = upload_adif_data($ua, $encoded_adif_data);
 
@@ -94,10 +134,7 @@ foreach my $line (<$adif_fh>) {
         $reasons{$reason}++ if ($reason);
         warn "Line $line_no: $reason\n" if $verbose;
     }
-
 }
-
-close $adif_fh;
 
 # Print some status information
 warn "Completed. OK: $ok_count FAIL: $bad_count\n";
@@ -130,6 +167,7 @@ sub upload_adif_data {
             return (0, undef);
         }
         else {
+            warn $response->content if $verbose;
             return (undef, $status->{REASON});
         }
     }

@@ -22,6 +22,7 @@ I've tried to keep this script's dependencies to a minimum, but to run this
 you'll need:
 
 * Data::Dump
+* Ham::ADIF
 * Pod::Usage
 * LWP::UserAgent
 * URI::Encode
