@@ -1,4 +1,4 @@
-# 2E0PUH's log upload tools
+# M0PUH's log upload tools
 
 This repo contains scripts for uploading log files to various online logbooks.
 
